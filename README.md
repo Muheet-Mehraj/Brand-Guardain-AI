@@ -19,7 +19,7 @@ A typical use case involves reviewing sponsored influencer content before public
 
 ## Architecture
 
-![Architecture Diagram](./docs/architecture.png)
+![Architecture Diagram](./docs/Architecture.png)
 
 ```text
 [YouTube URL]
