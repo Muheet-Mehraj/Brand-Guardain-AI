@@ -1,7 +1,7 @@
 [project]
 name = "brand-guardain"
 version = "0.1.0"
-description = "Add your description here"
+description = "Scalable AI compliance engine leveraging Azure Video Indexer, LangGraph orchestration, and RAG pipelines to analyze video content using transcripts, OCR, and vector search."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
