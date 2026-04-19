@@ -23,7 +23,7 @@ load_dotenv(override=True)
 
 
 # ========== STEP 2: INITIALIZE TELEMETRY ==========
-from backend.src.api.telemetry import setup_telemetry
+from backend.src.api.telementry import setup_telemetry
 setup_telemetry()  
 # ☝️ "Activates the sensors" - starts tracking all API activity
 # Must happen AFTER load_dotenv() but BEFORE creating FastAPI app
