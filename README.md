@@ -21,11 +21,6 @@ A typical use case involves reviewing sponsored influencer content before public
 
 ![Architecture Diagram](./docs/Architecture.png)
 
-   
-[Observability]
-  Azure Application Insights ── Logs, metrics, request tracing
-  LangSmith ─────────────────── LangGraph node-level debugging
-```
 
 ---
 
