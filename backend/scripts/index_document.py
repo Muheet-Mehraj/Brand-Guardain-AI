@@ -25,25 +25,26 @@ def index_docs():
     Reads PDFs from backend/data, chunks them, and uploads vectors to Azure AI Search.
     """
     # 2. Define Paths
-    # We look for the 'data' folder relative to this script's location
     current_dir = os.path.dirname(os.path.abspath(__file__))
     data_folder = os.path.join(current_dir, "../../backend/data")
     
     # 3. Debug: Check Environment Variables
     logger.info("=" * 60)
     logger.info("Environment Configuration Check:")
-    logger.info(f"AZURE_OPENAI_ENDPOINT: {os.getenv('AZURE_OPENAI_ENDPOINT')}")
+    logger.info(f"AZURE_OPENAI_EMBEDDING_ENDPOINT: {os.getenv('AZURE_OPENAI_EMBEDDING_ENDPOINT')}")
     logger.info(f"AZURE_OPENAI_API_VERSION: {os.getenv('AZURE_OPENAI_API_VERSION')}")
-    logger.info(f"Embedding Deployment: {os.getenv('AZURE_OPENAI_EMBEDDING_DEPLOYMENT', 
-                                                   'text-embedding-3-small')}")
+    logger.info(f"Embedding Deployment: {os.getenv('AZURE_OPENAI_EMBEDDING_DEPLOYMENT', 'text-embedding-3-small')}")
     logger.info(f"AZURE_SEARCH_ENDPOINT: {os.getenv('AZURE_SEARCH_ENDPOINT')}")
     logger.info(f"AZURE_SEARCH_INDEX_NAME: {os.getenv('AZURE_SEARCH_INDEX_NAME')}")
     logger.info("=" * 60)
     
+    print("SEARCH ENDPOINT:", repr(os.getenv("AZURE_SEARCH_ENDPOINT")))
+    print("EMBEDDING ENDPOINT:", repr(os.getenv("AZURE_OPENAI_EMBEDDING_ENDPOINT")))
+
     # 4. Validate Required Environment Variables
     required_vars = [
-        "AZURE_OPENAI_ENDPOINT",
-        "AZURE_OPENAI_API_KEY",
+        "AZURE_OPENAI_EMBEDDING_ENDPOINT",   # brandguardainfoundary101.cognitiveservices.azure.com
+        "AZURE_OPENAI_EMBEDDING_API_KEY",
         "AZURE_SEARCH_ENDPOINT",
         "AZURE_SEARCH_API_KEY",
         "AZURE_SEARCH_INDEX_NAME"
@@ -55,16 +56,14 @@ def index_docs():
         logger.error("Please check your .env file and ensure all variables are set.")
         return
     
-    # 5. Initialize Embedding Model (The "Translator")
-    # This turns text into numbers (vectors).
-    # MUST match the model you deployed in Azure AI Foundry ("text-embedding-3-small")
+    # 5. Initialize Embedding Model
     try:
         logger.info("Initializing Azure OpenAI Embeddings...")
         embeddings = AzureOpenAIEmbeddings(
             azure_deployment=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-small"),
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-            openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_EMBEDDING_ENDPOINT"),   # ← embedding resource
+            api_key=os.getenv("AZURE_OPENAI_EMBEDDING_API_KEY"),           # ← embedding key
+            openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-12-01-preview"),
         )
         logger.info("✓ Embeddings model initialized successfully")
     except Exception as e:
@@ -72,7 +71,7 @@ def index_docs():
         logger.error("Please verify your Azure OpenAI deployment name and endpoint.")
         return
     
-    # 6. Initialize Azure Search (The Database)
+    # 6. Initialize Azure Search
     try:
         logger.info("Initializing Azure AI Search vector store...")
         index_name = os.getenv("AZURE_SEARCH_INDEX_NAME")
@@ -82,7 +81,7 @@ def index_docs():
             index_name=index_name,
             embedding_function=embeddings.embed_query
         )
-        logger.info(f" Vector store initialized for index: {index_name}")
+        logger.info(f"✓ Vector store initialized for index: {index_name}")
     except Exception as e:
         logger.error(f"Failed to initialize Azure Search: {e}")
         logger.error("Please verify your Azure Search endpoint, API key, and index name.")
@@ -105,16 +104,12 @@ def index_docs():
             loader = PyPDFLoader(pdf_path)
             raw_docs = loader.load()
             
-            # 9. Chunking Strategy
-            # We split text into 1000-character chunks with 200-character overlap
-            # to ensure context isn't lost between cuts.
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=1000,
                 chunk_overlap=200
             )
             splits = text_splitter.split_documents(raw_docs)
             
-            # Tag the source for citation later
             for split in splits:
                 split.metadata["source"] = os.path.basename(pdf_path)
             
@@ -124,14 +119,13 @@ def index_docs():
         except Exception as e:
             logger.error(f"Failed to process {pdf_path}: {e}")
     
-    # 10. Upload to Azure
+    # 9. Upload to Azure
     if all_splits:
         logger.info(f"Uploading {len(all_splits)} chunks to Azure AI Search Index '{index_name}'...")
         try:
-            # Azure Search accepts batches automatically via this method
             vector_store.add_documents(documents=all_splits)
             logger.info("=" * 60)
-            logger.info(" Indexing Complete! The Knowledge Base is ready.")
+            logger.info("✓ Indexing Complete! The Knowledge Base is ready.")
             logger.info(f"Total chunks indexed: {len(all_splits)}")
             logger.info("=" * 60)
         except Exception as e:
