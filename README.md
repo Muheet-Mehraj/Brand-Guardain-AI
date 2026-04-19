@@ -21,30 +21,7 @@ A typical use case involves reviewing sponsored influencer content before public
 
 ![Architecture Diagram](./docs/Architecture.png)
 
-```text
-[YouTube URL]
-     │
-     ▼
-[Entry Points]
-  main.py (CLI) ──────────────────────────────────────────────┐
-  FastAPI /audit (API) ───────────────────────────────────────┤
-                                                               ▼
-                                               [LangGraph Workflow]
-                                               ┌───────────────────────┐
-                                               │  index_video_node     │──► Azure Blob Storage (temp)
-                                               │  (yt-dlp + Azure VI)  │──► Azure Video Indexer
-                                               │                       │◄── Transcript + OCR
-                                               └──────────┬────────────┘
-                                                          │
-                                               ┌──────────▼────────────┐
-                                               │  audit_content_node   │──► Azure AI Search (Vector DB)
-                                               │  (RAG + LLM Auditor)  │──► Azure OpenAI (GPT-4o)
-                                               │                       │◄── Compliance Report
-                                               └───────────────────────┘
-                                                          │
-                                               [Structured Audit Report]
-                                               PASS/FAIL + Violations + Summary
-
+   
 [Observability]
   Azure Application Insights ── Logs, metrics, request tracing
   LangSmith ─────────────────── LangGraph node-level debugging
