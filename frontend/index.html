@@ -449,7 +449,7 @@
 </div>
 
 <script>
-  const API_BASE = 'https://brand-guardian-api.azurewebsites.net'; 
+  const API_BASE = 'https://brand-guardian-api.onrender.com';
 
   const steps = ['step1','step2','step3','step4','step5'];
   let stepTimer = null;
@@ -538,9 +538,9 @@
     const violations = data.compliance_results || [];
     document.getElementById('violationCount').textContent = violations.length + ' issue' + (violations.length !== 1 ? 's' : '');
 
-    const critical = violations.filter(v => v.severity === 'CRITICAL').length;
-    const high = violations.filter(v => v.severity === 'HIGH').length;
-    const medium = violations.filter(v => ['MEDIUM','WARNING'].includes(v.severity)).length;
+    const critical = violations.filter(v => ['CRITICAL'].includes(v.severity)).length;
+    const high = violations.filter(v => ['HIGH','MAJOR'].includes(v.severity)).length;
+    const medium = violations.filter(v => ['MEDIUM','WARNING','MODERATE','LOW'].includes(v.severity)).length;
 
     document.getElementById('statsRow').innerHTML = `
       <div class="stat-card"><div class="stat-num critical">${critical}</div><div class="stat-label">Critical</div></div>
@@ -554,7 +554,8 @@
     } else {
       list.innerHTML = violations.map(v => {
         const sev = (v.severity || '').toLowerCase();
-        const sevClass = sev === 'critical' ? 'critical' : sev === 'high' ? 'high' : 'medium';
+        const sevClass = sev === 'critical' ? 'critical' : 
+                 (sev === 'high' || sev === 'major') ? 'high' : 'medium';
         return `
           <div class="violation-card ${sevClass}">
             <div class="violation-top">
