@@ -449,7 +449,9 @@
 </div>
 
 <script>
-  const API_BASE = 'https://brand-guardain-ai.onrender.com';
+  const API_BASE = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:8000'
+  : 'https://brand-guardain-ai.onrender.com';
 
   const steps = ['step1','step2','step3','step4','step5'];
   let stepTimer = null;
